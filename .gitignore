@@ -1,0 +1,26 @@
+*.pdf
+temp/          # Ignore a folder named "temp"
+my_secret.txt  # Ignore a specific file 
+build/
+app.log
+my_app.log
+__pycache__/
+__init__.py
+*.py[cod]
+venv/
+*.log
+*.egg-info/
+dist/
+build/
+.tox/
+.nox/
+.coverage
+*.cover
+htmlcov/
+.idea/
+.vscode/
+data/ 
+secrets.ini 
+.env
+env/
+env
