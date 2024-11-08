@@ -13,6 +13,16 @@ class Project(BaseModel):
     end_date: Optional[str]
     technologies_used: List[str] = Field(default_factory=list)
 
+class WorkExperienceItem(BaseModel):
+    company: str
+    title: str
+    start_date: Optional[str] = None  # 'YYYY-MM-DD' or null
+    end_date: Optional[str] = None  # 'YYYY-MM-DD', 'present', or null
+    responsibilities: List[str] = Field(default_factory=list)
+    company_type: Optional[str] = None  # Added field to store the type of company (e.g., startup, enterprise)
+    industry: List[str] = Field(default_factory=list)  # Added field to store industries associated with the company
+    tech_stack: List[str] = Field(default_factory=list)  # Added field to store technologies used by the company
+
 class CandidateProfile(BaseModel):
     id: str = Field(default_factory=lambda: str(ObjectId()), alias="_id")
     name: str = Field(..., min_length=2, max_length=100)
@@ -29,7 +39,7 @@ class CandidateProfile(BaseModel):
     languages: List[Dict[str, str]] = Field(default_factory=list)  # Expecting a list of dictionaries
     # Example of a dictionary format could be {"language": "English", "proficiency": "fluent"}
     summary: Optional[str] = None
-    work_experience: List[str] = Field(default_factory=list)
+    work_experience: List[WorkExperienceItem] = Field(default_factory=list)  # Use updated WorkExperienceItem here
     projects: List[str] = Field(default_factory=list)
     awards: List[str] = Field(default_factory=list)
     location: Optional[str] = Field(None, min_length=2, max_length=100)
