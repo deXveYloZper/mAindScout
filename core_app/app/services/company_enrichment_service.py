@@ -5,13 +5,13 @@ import re
 from typing import Optional, Dict, List
 from pymongo import MongoClient, UpdateOne
 from app.core.models import CompanyProfile
-from app.utils.web_scraper_utils import WebScraperUtil  # Importing web scraping utility
+from scraper_app.utils.web_scraper_utils import WebScraperUtil  # Importing web scraping utility
 from datetime import datetime
 
 class CompanyEnrichmentService:
     def __init__(self, db_uri: str, db_name: str):
         """
-        Initializes the CompanyEnrichmentService with MongoDB connection details.
+        Initializes the CompanyEnrichmentService with MongoDB connection details and scraper utility.
 
         Args:
             db_uri (str): MongoDB connection string.
@@ -63,69 +63,9 @@ class CompanyEnrichmentService:
         except Exception as e:
             self.logger.error(f"Error during company enrichment from candidate profiles: {str(e)}", exc_info=True)
 
-    def _prepare_enrichment_fields(self, company: dict, work_experience: dict) -> dict:
-        """
-        Prepares the fields for enrichment based on candidate work experience.
-
-        Args:
-            company (dict): The existing company profile.
-            work_experience (dict): A candidate's work experience entry.
-
-        Returns:
-            dict: Fields to be updated in the company profile.
-        """
-        update_fields = {}
-
-        # Example enrichment logic
-        if "tech_stack" in work_experience:
-            existing_tech_stack = {tech.technology for tech in company.get("tech_stack", [])}
-            new_tech_stack = set(work_experience.get("tech_stack", []))
-            # Add technologies not present in the existing tech stack
-            if new_tech_stack - existing_tech_stack:
-                update_fields["tech_stack"] = list(existing_tech_stack | new_tech_stack)
-
-        if "industry" in work_experience:
-            existing_industries = set(company.get("industry", []))
-            new_industries = set(work_experience.get("industry", []))
-            # Add industries not present in the existing industries list
-            if new_industries - existing_industries:
-                update_fields["industry"] = list(existing_industries | new_industries)
-
-        if "location" in work_experience:
-            existing_locations = set(company.get("location", []))
-            new_locations = {work_experience["location"]}
-            if new_locations - existing_locations:
-                update_fields["location"] = list(existing_locations | new_locations)
-
-        if "company_type" in work_experience and not company.get("company_type"):
-            update_fields["company_type"] = work_experience["company_type"]
-
-        return update_fields
-
-    def _log_provenance(self, company_id: str, update_fields: dict, candidate_id: str):
-        """
-        Logs the provenance for each update in the company profile.
-
-        Args:
-            company_id (str): ID of the company being updated.
-            update_fields (dict): Fields that were updated in the company profile.
-            candidate_id (str): The ID of the candidate whose data was used for enrichment.
-        """
-        try:
-            provenance_entry = {
-                "company_id": company_id,
-                "updated_fields": update_fields,
-                "source_candidate_id": candidate_id,
-                "timestamp": datetime.utcnow()
-            }
-            self.provenance_collection.insert_one(provenance_entry)
-            self.logger.info(f"Provenance logged for company_id {company_id} from candidate_id {candidate_id}.")
-        except Exception as e:
-            self.logger.error(f"Error logging provenance for company_id {company_id}: {str(e)}", exc_info=True)
-
     def enrich_company_from_external_sources(self, company_name: str) -> None:
         """
-        Enrich company profiles using external sources such as scraping and third-party APIs.
+        Enrich company profiles using external sources such as scraping via ScrapeGraphAI.
 
         Args:
             company_name (str): Name of the company to be enriched.
@@ -137,8 +77,8 @@ class CompanyEnrichmentService:
                 self.logger.info(f"Company '{company_name}' not found in the database for external enrichment.")
                 return
 
-            # Web scraping to enrich company details
-            scraped_data = self.scraper.scrape_company_details(company_name)
+            # Use ScrapeGraphAI to scrape company details
+            scraped_data = self.scraper.scrape_company_details(f"https://{company_name}.com")
 
             update_fields = {}
             if "description" in scraped_data and not company.get("company_description"):
@@ -146,13 +86,13 @@ class CompanyEnrichmentService:
 
             if "industry" in scraped_data:
                 existing_industries = set(company.get("industry", []))
-                new_industries = set(scraped_data["industry"])
+                new_industries = set(scraped_data["industry"].split(", ")) if scraped_data.get("industry") else set()
                 if new_industries - existing_industries:
                     update_fields["industry"] = list(existing_industries | new_industries)
 
             if "location" in scraped_data:
                 existing_locations = set(company.get("location", []))
-                new_locations = set(scraped_data["location"])
+                new_locations = set(scraped_data["location"].split(", ")) if scraped_data.get("location") else set()
                 if new_locations - existing_locations:
                     update_fields["location"] = list(existing_locations | new_locations)
 
@@ -172,3 +112,23 @@ class CompanyEnrichmentService:
         except Exception as e:
             self.logger.error(f"Error during external enrichment for company '{company_name}': {str(e)}", exc_info=True)
 
+    def _log_provenance(self, company_id: str, update_fields: dict, source: str):
+        """
+        Logs the provenance for each update in the company profile.
+
+        Args:
+            company_id (str): ID of the company being updated.
+            update_fields (dict): Fields that were updated in the company profile.
+            source (str): The source of the enrichment (e.g., candidate or scraper).
+        """
+        try:
+            provenance_entry = {
+                "company_id": company_id,
+                "updated_fields": update_fields,
+                "source": source,
+                "timestamp": datetime.utcnow()
+            }
+            self.provenance_collection.insert_one(provenance_entry)
+            self.logger.info(f"Provenance logged for company_id {company_id} from source {source}.")
+        except Exception as e:
+            self.logger.error(f"Error logging provenance for company_id {company_id}: {str(e)}", exc_info=True)

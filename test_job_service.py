@@ -2,8 +2,8 @@
 
 import asyncio
 from fastapi import UploadFile
-from app.services.job_service import JobService
-from app.core.config import settings
+from core_app.app.services.job_service import JobService
+from core_app.app.core.config import settings
 
 async def test_job_service():
     # Step 1: Set up the JobService instance

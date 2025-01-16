@@ -24,3 +24,14 @@ secrets.ini
 .env
 env/
 env
+.txt
+.yml
+dependencies.txt
+docker-compose.yml
+Dockerfile
+/logs
+requirements.txt
+/cache
+cache
+test_candidate_service.py
+test_job_service.py
