@@ -1,17 +1,16 @@
 # app/services/candidate_service.py
 
 import logging
-from app.core.models import CandidateProfile
+from app.core.models import CandidateProfile, CompanyProfile
 from app.utils.openai_utils import extract_info_from_text
 from app.prompts.candidate_prompts import TECH_CANDIDATE_PROFILE_EXTRACTION_PROMPT
-from app.utils import nlp_utils 
+from app.utils import nlp_utils
 from pymongo import MongoClient
 from pymongo.errors import DuplicateKeyError
 from typing import List, Optional
 import os
 import json
-
-
+import re
 
 
 class CandidateService:
@@ -20,6 +19,7 @@ class CandidateService:
         self.client = MongoClient(db_uri)
         self.db = self.client[db_name]
         self.candidate_collection = self.db['CandidateProfiles']
+        self.company_collection = self.db['companies']  # Access to the CompanyProfile collection
 
         # Load the taxonomy
         taxonomy_path = os.path.join('app', 'data', 'tag_taxonomy.json')
@@ -73,7 +73,10 @@ class CandidateService:
             # Validate that required fields are present
             if not mapped_data["name"] or not mapped_data["email"]:
                 raise ValueError("Required fields 'name' or 'email' are missing in the extracted data.")
-            
+
+            # Enrich work experience by cross-referencing with company profiles
+            mapped_data['work_experience'] = self.enrich_work_experience(mapped_data.get('work_experience', []))
+
             # Enhance with NLP features
             full_text = resume_text  # Use the entire resume text for NLP processing
 
@@ -101,7 +104,7 @@ class CandidateService:
             # Create CandidateProfile object
             candidate_profile = CandidateProfile(**mapped_data)
 
-           # Store in the database
+            # Store in the database
             try:
                 self.candidate_collection.insert_one(candidate_profile.model_dump(by_alias=True))
             except DuplicateKeyError:
@@ -114,7 +117,76 @@ class CandidateService:
             # Improved error handling (Point 6)
             self.logger.error(f"Failed to parse and store candidate profile: {str(e)}", exc_info=True)
             raise ValueError(f"Error processing candidate profile: {str(e)}") from e
-        
+
+    def get_company_profile_by_name(self, company_name: str) -> Optional[CompanyProfile]:
+        """
+        Retrieves a company profile by company name from the database.
+
+        Args:
+            company_name (str): The name of the company.
+
+        Returns:
+            Optional[CompanyProfile]: The company profile if found, otherwise None.
+        """
+        try:
+            company_data = self.company_collection.find_one({"company_name": company_name})
+            if company_data:
+                return CompanyProfile(**company_data)
+            else:
+                self.logger.debug(f"No company found with name: {company_name}")
+                return None
+        except Exception as e:
+            self.logger.error(f"Error retrieving company with name {company_name}: {str(e)}", exc_info=True)
+            return None
+
+    def enrich_work_experience(self, work_experience: List[dict]) -> List[dict]:
+        """
+        Enrich the work experience entries with data from the company database.
+
+        Args:
+            work_experience (List[dict]): List of work experience dictionaries.
+
+        Returns:
+            List[dict]: Enriched list of work experience dictionaries.
+        """
+        enriched_experience = []
+
+        for experience in work_experience:
+            company_name = experience.get("company")
+            if company_name:
+                company_data = self.cross_reference_company(company_name)
+                if company_data:
+                    # Enrich work experience with company data
+                    experience['company_type'] = company_data.get('company_type')
+                    experience['industry'] = company_data.get('industry', [])
+                    experience['tech_stack'] = [tech.technology for tech in company_data.get('tech_stack', [])]
+
+            enriched_experience.append(experience)
+
+        return enriched_experience
+
+    def cross_reference_company(self, company_name: str) -> Optional[dict]:
+        """
+        Cross-references a company name with the company database.
+
+        Args:
+            company_name (str): The name of the company to look up.
+
+        Returns:
+            Optional[dict]: The company data if found, otherwise None.
+        """
+        try:
+            # Perform a case-insensitive search for the company name
+            company = self.company_collection.find_one({"company_name": {"$regex": f"^{re.escape(company_name)}$", "$options": "i"}})
+            if company:
+                return company
+            else:
+                self.logger.info(f"Company '{company_name}' not found in the database.")
+                return None
+        except Exception as e:
+            self.logger.error(f"Error during company cross-reference: {str(e)}", exc_info=True)
+            return None
+
     def process_projects(self, projects: List[str]) -> List[dict]:
         """
         Convert the project data from list of strings to list of dictionaries.
@@ -146,7 +218,7 @@ class CandidateService:
             text_components.append(' '.join(candidate_data["standardized_skills"]))
         if candidate_data.get("summary"):
             text_components.append(candidate_data["summary"])
-        
+
         # Handle work experience field if it's a list of dictionaries
         if candidate_data.get("work_experience"):
             for experience in candidate_data["work_experience"]:
@@ -156,7 +228,7 @@ class CandidateService:
                     text_components.append(experience_text)
                 elif isinstance(experience, str):
                     text_components.append(experience)
-        
+
         # Handle projects if they are a list of dictionaries
         if candidate_data.get("projects"):
             for project in candidate_data["projects"]:
@@ -165,12 +237,12 @@ class CandidateService:
                     text_components.append(project_text)
                 elif isinstance(project, str):
                     text_components.append(project)
-        
+
         if candidate_data.get("education"):
             if isinstance(candidate_data["education"], list):
                 education_text = ' '.join(str(edu) for edu in candidate_data["education"] if isinstance(edu, str))
                 text_components.append(education_text)
-        
+
         if candidate_data.get("certifications"):
             if isinstance(candidate_data["certifications"], list):
                 certifications_text = ' '.join(str(cert) for cert in candidate_data["certifications"] if isinstance(cert, str))
@@ -182,7 +254,6 @@ class CandidateService:
         # Generate tags using the flattened taxonomy
         tags = nlp_utils.generate_company_tags(combined_text, self.flat_taxonomy)
         return tags
-
 
     def get_candidate_profile(self, candidate_id: str) -> Optional[CandidateProfile]:
         """
@@ -198,7 +269,6 @@ class CandidateService:
         except Exception as e:
             self.logger.error(f"Error retrieving candidate with ID {candidate_id}: {str(e)}", exc_info=True)
             return None
-
 
     def update_candidate_profile(self, candidate_id: str, updates: dict) -> bool:
         """

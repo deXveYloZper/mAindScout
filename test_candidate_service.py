@@ -3,8 +3,8 @@
 import asyncio
 import pdfplumber
 from fastapi import UploadFile
-from app.services.candidate_service import CandidateService
-from app.core.config import settings
+from core_app.app.services.candidate_service import CandidateService
+from core_app.app.core.config import settings
 
 async def test_candidate_service():
     # Step 1: Set up the CandidateService instance
