@@ -1,4 +1,4 @@
-# app/utils/web_scraper_utils.py
+# core_app/app/utils/web_scraper_utils.py
 
 import logging
 import os
