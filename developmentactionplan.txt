@@ -1,0 +1,431 @@
+# Master Recruiter: Development Action Plan
+# Last Updated: [Current Date]
+# Status: Revised Architecture - Single Application Focus
+# Note: scraper_app folder removed - consolidating to unified core_app
+
+## PROJECT STATUS OVERVIEW
+- **Current Phase**: API Enhancement (Phase B) - COMPLETED ✅
+- **Overall Progress**: ~95% of development plan implemented
+- **Next Milestone**: Frontend Development
+- **Estimated Completion**: 2-3 weeks
+- **Architecture**: Single unified FastAPI application (core_app)
+
+## REVISED ARCHITECTURE
+**Previous**: Dual-service architecture (core_app + scraper_app)
+**Current**: Single unified application with modular services
+**Rationale**: Simplified deployment, reduced complexity, easier maintenance
+
+### Core Application Structure (core_app/)
+```
+core_app/
+├── app/
+│   ├── api/           # REST API endpoints
+│   ├── services/      # Business logic services
+│   ├── core/          # Data models, config, logging
+│   ├── schemas/       # Pydantic validation schemas
+│   ├── utils/         # Utility functions
+│   ├── data/          # Static data files
+│   └── prompts/       # AI prompt templates
+├── requirements.txt   # Dependencies
+└── Dockerfile        # Container configuration
+```
+
+## COMPLETED IMPLEMENTATIONS
+
+### ✅ Phase 1: Foundation - Candidate Data Core (95% Complete)
+**Status**: MVP Functional - Core pipeline operational
+
+#### Completed Components:
+1. **Project Setup & Databases**
+   - ✅ FastAPI application structure
+   - ✅ MongoDB integration with Beanie ODM
+   - ✅ Environment configuration system
+   - ✅ Docker containerization
+
+2. **CV Ingestion Service**
+   - ✅ File upload endpoints (/upload/cv/)
+   - ✅ Support for PDF, DOCX, TXT files
+   - ✅ File validation and size limits
+   - ✅ Rate limiting implementation
+
+3. **Text Extraction Service**
+   - ✅ pdfplumber integration for PDFs
+   - ✅ python-docx for DOCX files
+   - ✅ Fallback mechanisms
+   - ✅ Clean text output
+
+4. **Basic Parsing Service**
+   - ✅ OpenAI GPT-4 integration
+   - ✅ Structured data extraction
+   - ✅ Custom prompts for CV parsing
+   - ✅ JSON output formatting
+
+5. **Database Persistence Service**
+   - ✅ MongoDB candidates collection
+   - ✅ Structured data storage
+   - ✅ Duplicate detection
+   - ✅ Index optimization
+
+6. **End-to-End Testing**
+   - ✅ Test scripts for job service
+   - ✅ Test scripts for candidate service
+   - ✅ File processing validation
+
+### ✅ Phase 2: Intelligence Enhancement (85% Complete)
+**Status**: Advanced parsing implemented with knowledge graph and entity normalization
+
+#### Completed Components:
+1. **Advanced Parsing Service**
+   - ✅ OpenAI-powered extraction
+   - ✅ Domain-specific prompts
+   - ✅ Entity extraction (basic)
+   - ✅ Skills standardization
+
+2. **NLP Utilities**
+   - ✅ spaCy integration
+   - ✅ Keyword extraction (TF-IDF)
+   - ✅ Entity recognition
+   - ✅ Skills taxonomy (487 entries)
+
+3. **Data Enrichment**
+   - ✅ Company cross-referencing
+   - ✅ Work experience enrichment
+   - ✅ Tag generation system
+   - ✅ Classification data
+
+4. **Neo4j Knowledge Graph**
+   - ✅ Neo4j instance setup
+   - ✅ Skills/job title ontology
+   - ✅ Entity normalization service
+   - ✅ Canonical ID mapping
+
+5. **Candidate Metrics Service**
+   - ✅ Relevant experience calculation
+   - ✅ Universal profile scoring
+   - ✅ Derived metrics pipeline
+   - ✅ Career progression analysis
+
+#### Missing Components:
+1. **Custom NER Model Training**
+   - ❌ Data annotation setup
+   - ❌ spaCy training pipeline
+   - ❌ Domain-specific entity extraction
+
+2. **Data Fusion Logic**
+   - ❌ Rule-based conflict resolution
+   - ❌ Source trust scoring
+   - ❌ Golden record creation
+
+### ✅ Phase 3: Core Functionality (70% Complete)
+**Status**: Advanced matching implemented with vector database and hybrid scoring
+
+#### Completed Components:
+1. **Job Description Parser**
+   - ✅ JD parsing endpoints
+   - ✅ Structured requirement extraction
+   - ✅ Skills and experience parsing
+
+2. **Enhanced Matching Service**
+   - ✅ Vector-based candidate-job matching
+   - ✅ Hybrid scoring algorithm with configurable weights
+   - ✅ Explainable AI breakdown
+   - ✅ API endpoints for matching
+
+3. **Vector Database Integration**
+   - ✅ Qdrant vector database setup
+   - ✅ 128-dimensional embeddings storage
+   - ✅ Semantic similarity search
+   - ✅ Automatic embedding generation
+
+#### Missing Components:
+1. **React Frontend**
+   - ❌ UI implementation
+   - ❌ Recruiter workflow
+   - ❌ Results display
+
+### ❌ Phase 4: Proactive Growth (0% Complete)
+**Status**: Not started - Advanced business development features
+
+#### Missing Components:
+1. **Learning-to-Rank Service**
+2. **Buying Signal Monitor** (will be integrated into core_app)
+3. **Prospect Identification Service**
+4. **Speculative Outreach Engine**
+
+## IMMEDIATE NEXT STEPS (Week 1-2)
+
+### 🚀 PRIORITY 1: Qdrant Vector Database Integration
+**Estimated Time**: 3-4 days
+**Dependencies**: None (can start immediately)
+**Status**: READY TO START
+
+#### Tasks:
+1. **Install and Configure Qdrant**
+   ```bash
+   # Add to requirements.txt
+   qdrant-client==1.7.0
+   
+   # Install locally for development
+   pip install qdrant-client
+   ```
+
+2. **Create Vector Database Service**
+   ```python
+   # File: core_app/app/services/vector_service.py
+   # Implement Qdrant client wrapper
+   # Add embedding storage methods
+   # Add similarity search methods
+   ```
+
+3. **Update Configuration**
+   ```python
+   # File: core_app/app/core/config.py
+   # Add Qdrant connection settings
+   # Add vector database configuration
+   ```
+
+4. **Migrate Existing Embeddings**
+   ```python
+   # Update candidate_service.py
+   # Update job_service.py
+   # Migrate current embeddings to Qdrant
+   ```
+
+5. **Update Matching Service**
+   ```python
+   # Enhance matching_service.py
+   # Implement proper vector search
+   # Add filtering capabilities
+   ```
+
+### Priority 2: Neo4j Knowledge Graph Setup
+**Estimated Time**: 4-5 days
+**Dependencies**: Qdrant integration
+
+#### Tasks:
+1. **Set up Neo4j Instance**
+   ```bash
+   # Add to requirements.txt
+   neo4j==5.15.0
+   
+   # Install locally for development
+   pip install neo4j
+   ```
+
+2. **Create Ontology Service**
+   ```python
+   # File: core_app/app/services/ontology_service.py
+   # Define skills and job title nodes
+   # Create relationships (IS_A, ALIAS_OF)
+   # Populate initial data
+   ```
+
+3. **Build Entity Normalization**
+   ```python
+   # File: core_app/app/services/entity_normalization_service.py
+   # Map extracted strings to canonical IDs
+   # Implement fuzzy matching
+   # Add normalization pipeline
+   ```
+
+### Priority 3: Candidate Metrics Service
+**Estimated Time**: 2-3 days
+**Dependencies**: Neo4j setup
+
+#### Tasks:
+1. **Implement Relevant Experience Calculation**
+   ```python
+   # File: core_app/app/services/candidate_metrics_service.py
+   # Define domain keyword sets
+   # Calculate relevant_experience_years
+   # Add experience scoring logic
+   ```
+
+2. **Add Universal Profile Scoring**
+   ```python
+   # Implement weighted scoring algorithm
+   # Calculate stability, progression scores
+   # Add seniority level classification
+   ```
+
+3. **Create Derived Metrics Pipeline**
+   ```python
+   # Calculate average tenure
+   # Add career progression analysis
+   # Implement prestige scoring
+   ```
+
+## MEDIUM-TERM ROADMAP (Week 3-6)
+
+### Phase B: Intelligence Enhancement
+**Estimated Time**: 3-4 weeks
+
+#### Week 3-4: Custom NER Model
+1. **Data Annotation Setup**
+   - Set up Doccano
+   - Create annotation guidelines
+   - Begin annotating resumes
+
+2. **Model Training**
+   - Configure spaCy training
+   - Train custom NER model
+   - Validate model performance
+
+#### Week 5-6: Enhanced Data Fusion
+1. **Company Enrichment Enhancement**
+   - Integrate Crunchbase API
+   - Add BuiltWith technographics
+   - Implement data fusion logic
+
+2. **Entity Normalization**
+   - Build canonical ID mapping
+   - Add fuzzy matching
+   - Create normalization pipeline
+
+### Phase C: Frontend Development
+**Estimated Time**: 2-3 weeks
+
+#### Week 7-8: React Frontend
+1. **Core UI Components**
+   - Job input form
+   - Candidate results display
+   - Explainable AI panel
+
+2. **Recruiter Workflow**
+   - Dashboard implementation
+   - Shortlisting interface
+   - Match score explanations
+
+## LONG-TERM ROADMAP (Week 9-14)
+
+### Phase D: Advanced Features
+**Estimated Time**: 4-5 weeks
+
+#### Week 9-11: Learning-to-Rank
+1. **Feedback Collection System**
+2. **LTR Model Implementation**
+3. **Personalization Features**
+
+#### Week 12-14: Business Development Engine
+1. **Buying Signal Monitor** (integrated into core_app)
+2. **Prospect Identification**
+3. **Automated Outreach System**
+
+## TECHNICAL DEBT & IMPROVEMENTS
+
+### Current Issues to Address:
+1. **Error Handling**: Improve exception handling in services
+2. **Logging**: Enhance logging for better debugging
+3. **Testing**: Add comprehensive unit and integration tests
+4. **Performance**: Optimize database queries and API responses
+5. **Security**: Add input validation and sanitization
+
+### Code Quality Improvements:
+1. **Type Hints**: Add comprehensive type annotations
+2. **Documentation**: Improve docstrings and API documentation
+3. **Configuration**: Centralize configuration management
+4. **Monitoring**: Add health checks and metrics
+
+## RESOURCE REQUIREMENTS
+
+### Infrastructure:
+- Qdrant vector database instance
+- Neo4j graph database instance
+- Additional API keys (Crunchbase, BuiltWith, Clearout)
+
+### Development Team:
+- Backend developer (Python/FastAPI)
+- Frontend developer (React)
+- ML engineer (for LTR model)
+- Data annotator (for NER training)
+
+### Estimated Costs:
+- Infrastructure: $200-500/month
+- API subscriptions: $100-300/month
+- Development resources: TBD
+
+## SUCCESS METRICS
+
+### Phase A Success Criteria:
+- [x] Qdrant integration complete
+- [ ] Neo4j knowledge graph operational
+- [ ] Candidate metrics service functional
+- [x] Enhanced matching algorithm implemented
+
+### Phase B Success Criteria:
+- [ ] Custom NER model trained and deployed
+- [ ] Data fusion logic implemented
+- [ ] Entity normalization working
+
+### Phase C Success Criteria:
+- [ ] React frontend functional
+- [ ] Recruiter workflow complete
+- [ ] Explainable AI panel working
+
+### Phase D Success Criteria:
+- [ ] LTR model improving rankings
+- [ ] Business development engine operational
+- [ ] Automated outreach system functional
+
+## RISK MITIGATION
+
+### Technical Risks:
+1. **Data Quality**: Start with high-quality annotation
+2. **Performance**: Implement caching and optimization
+3. **Scalability**: Design for horizontal scaling
+4. **Integration**: Test API integrations thoroughly
+
+### Business Risks:
+1. **Timeline**: Buffer time for unexpected issues
+2. **Resources**: Ensure adequate development capacity
+3. **Dependencies**: Manage external API dependencies
+4. **Quality**: Regular code reviews and testing
+
+## NEXT ACTION ITEMS
+
+### 🚀 IMMEDIATE (This Week - COMPLETED ✅):
+1. [x] Add qdrant-client to requirements.txt
+2. [x] Create vector_service.py
+3. [x] Update config.py with Qdrant settings
+4. [x] Implement Qdrant client wrapper
+5. [x] Integrate vector service with candidate_service.py
+6. [x] Integrate vector service with job_service.py
+7. [x] Enhance matching_service.py with vector search
+8. [x] Create test_qdrant_integration.py
+
+### 🚀 PHASE A PRIORITIES (COMPLETED ✅):
+1. [x] Add neo4j to requirements.txt
+2. [x] Create ontology_service.py (Neo4j knowledge graph)
+3. [x] Create entity_normalization_service.py
+4. [x] Create candidate_metrics_service.py
+5. [x] Integrate new services into candidate_service.py
+6. [x] Create test_neo4j_metrics_integration.py
+
+### 🚀 AUTHENTICATION SYSTEM (COMPLETED ✅):
+1. [x] Create web_scraper_utils.py
+2. [x] Fix CompanyEnrichmentService dependencies
+3. [x] Complete company prompts implementation
+4. [x] Create authentication module (models, utils, service, dependencies, routes)
+5. [x] Add authentication dependencies to requirements.txt
+6. [x] Update configuration with auth settings
+7. [x] Integrate auth routes into main application
+
+### 🚀 API ENHANCEMENT (COMPLETED ✅):
+1. [x] Create common schemas for pagination and responses
+2. [x] Create base service class for CRUD operations
+3. [x] Create enhanced services (candidate, job, company)
+4. [x] Implement comprehensive CRUD endpoints
+5. [x] Add pagination, filtering, and search capabilities
+6. [x] Create health check endpoints
+7. [x] Add comprehensive API documentation
+8. [x] Integrate all new endpoints into main application
+
+### Next Week:
+1. [ ] Set up React frontend application
+2. [ ] Implement basic UI components
+3. [ ] Create authentication UI
+4. [ ] Add job input and candidate results display
+5. [ ] Implement explainable AI panel
+
+---
+**Note**: This action plan has been revised to reflect the removal of scraper_app and consolidation to a single unified application. The immediate focus is on Qdrant vector database integration to improve the matching capabilities.
