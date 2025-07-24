@@ -16,7 +16,7 @@ class CandidateMetricsService:
     Builds upon existing evaluation logic to provide comprehensive candidate scoring.
     """
     
-    def __init__(self, entity_normalization: EntityNormalizationService, ontology_service: OntologyService):
+    def __init__(self, entity_normalization, ontology_service):
         """Initialize the entity normalization and ontology services for metrics calculation."""
         self.entity_normalization = entity_normalization
         self.ontology_service = ontology_service
@@ -531,7 +531,7 @@ class CandidateMetricsService:
             "skill_depth_score": 0.0
         }
     
-    def health_check(self) -> bool:
+    async def health_check(self) -> bool:
         """
         Perform a health check on the metrics service.
         
@@ -539,7 +539,7 @@ class CandidateMetricsService:
             bool: True if healthy, False otherwise
         """
         try:
-            return self.entity_normalization.health_check()
+            return await self.entity_normalization.health_check()
         except Exception as e:
             self.logger.error(f"Candidate metrics health check failed: {str(e)}")
             return False

@@ -46,7 +46,7 @@ class AuthService:
         if user_doc.get("locked_until") and datetime.utcnow() < user_doc["locked_until"]:
             return None
         if not verify_password(password, user_doc["hashed_password"]):
-            await run_in_threadpool(self._increment_failed_attempts, user_doc["_id"])
+            await self._increment_failed_attempts(user_doc["_id"])
             return None
         await self._reset_failed_attempts(user_doc["_id"])
         await run_in_threadpool(self.users_collection.update_one, {"_id": user_doc["_id"]}, {"$set": {"last_login": datetime.utcnow()}})

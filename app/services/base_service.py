@@ -17,7 +17,7 @@ class BaseService(Generic[T]):
     Generic type T represents the Pydantic model for the entity.
     """
     
-    def __init__(self, collection_name: str, db: Database):
+    def __init__(self, collection_name: str, db):
         """
         Initialize the base service.
         

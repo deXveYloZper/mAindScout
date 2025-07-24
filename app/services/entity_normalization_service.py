@@ -15,12 +15,12 @@ class EntityNormalizationService:
     Provides fuzzy matching and entity resolution capabilities.
     """
     
-    def __init__(self, ontology_service: OntologyService):
+    def __init__(self, ontology_service):
         """Initialize the ontology service for entity normalization."""
         self.ontology_service = ontology_service
         self.logger = logging.getLogger(__name__)
     
-    def normalize_skills(self, skills: List[str], fuzzy_threshold: float = 80.0) -> List[Dict[str, str]]:
+    async def normalize_skills(self, skills: List[str], fuzzy_threshold: float = 80.0) -> List[Dict[str, str]]:
         """
         Normalize a list of skills to their canonical forms.
         
@@ -41,7 +41,7 @@ class EntityNormalizationService:
             cleaned_skill = self._clean_entity_name(skill)
             
             # Try exact normalization first
-            canonical_skill = self.ontology_service.normalize_skill(cleaned_skill)
+            canonical_skill = await self.ontology_service.normalize_skill(cleaned_skill)
             
             if canonical_skill:
                 normalized_skills.append({
@@ -71,7 +71,7 @@ class EntityNormalizationService:
         
         return normalized_skills
     
-    def normalize_job_titles(self, job_titles: List[str], fuzzy_threshold: float = 80.0) -> List[Dict[str, str]]:
+    async def normalize_job_titles(self, job_titles: List[str], fuzzy_threshold: float = 80.0) -> List[Dict[str, str]]:
         """
         Normalize a list of job titles to their canonical forms.
         
@@ -92,7 +92,7 @@ class EntityNormalizationService:
             cleaned_title = self._clean_entity_name(title)
             
             # Try exact normalization first
-            canonical_title = self.ontology_service.normalize_job_title(cleaned_title)
+            canonical_title = await self.ontology_service.normalize_job_title(cleaned_title)
             
             if canonical_title:
                 normalized_titles.append({
@@ -122,7 +122,7 @@ class EntityNormalizationService:
         
         return normalized_titles
     
-    def normalize_work_experience(self, work_experience: List[Dict]) -> List[Dict]:
+    async def normalize_work_experience(self, work_experience: List[Dict]) -> List[Dict]:
         """
         Normalize work experience entries, including job titles and company names.
         
@@ -139,7 +139,7 @@ class EntityNormalizationService:
             
             # Normalize job title
             if "title" in exp and exp["title"]:
-                title_normalization = self.normalize_job_titles([exp["title"]])
+                title_normalization = await self.normalize_job_titles([exp["title"]])
                 if title_normalization:
                     normalized_exp["canonical_title"] = title_normalization[0]["canonical"]
                     normalized_exp["title_confidence"] = title_normalization[0]["confidence"]
@@ -155,7 +155,7 @@ class EntityNormalizationService:
                 skills_text = " ".join(exp["responsibilities"])
                 extracted_skills = self._extract_skills_from_text(skills_text)
                 if extracted_skills:
-                    normalized_skills = self.normalize_skills(extracted_skills)
+                    normalized_skills = await self.normalize_skills(extracted_skills)
                     normalized_exp["extracted_skills"] = normalized_skills
             
             normalized_experience.append(normalized_exp)
@@ -354,7 +354,7 @@ class EntityNormalizationService:
             "average_confidence": round(average_confidence, 3)
         }
     
-    def add_custom_mapping(self, original: str, canonical: str, entity_type: str = "skill") -> bool:
+    async def add_custom_mapping(self, original: str, canonical: str, entity_type: str = "skill") -> bool:
         """
         Add a custom mapping to the ontology.
         
@@ -368,9 +368,9 @@ class EntityNormalizationService:
         """
         try:
             if entity_type == "skill":
-                return self.ontology_service.add_skill_alias(canonical, original)
+                return await self.ontology_service.add_skill_alias(canonical, original)
             elif entity_type == "job_title":
-                return self.ontology_service.add_job_title_alias(canonical, original)
+                return await self.ontology_service.add_job_title_alias(canonical, original)
             else:
                 self.logger.error(f"Unknown entity type: {entity_type}")
                 return False
@@ -379,7 +379,7 @@ class EntityNormalizationService:
             self.logger.error(f"Error adding custom mapping: {str(e)}")
             return False
     
-    def health_check(self) -> bool:
+    async def health_check(self) -> bool:
         """
         Perform a health check on the normalization service.
         
@@ -387,7 +387,7 @@ class EntityNormalizationService:
             bool: True if healthy, False otherwise
         """
         try:
-            return self.ontology_service.health_check()
+            return await self.ontology_service.health_check()
         except Exception as e:
             self.logger.error(f"Entity normalization health check failed: {str(e)}")
             return False

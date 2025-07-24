@@ -11,7 +11,7 @@ from datetime import datetime
 from starlette.concurrency import run_in_threadpool
 
 class CompanyEnrichmentService:
-    def __init__(self, db: Database, scraper: WebScraperUtil):
+    def __init__(self, db, scraper):
         """
         Initializes the CompanyEnrichmentService with MongoDB connection details and scraper utility.
 

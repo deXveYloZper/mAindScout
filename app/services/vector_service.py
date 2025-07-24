@@ -11,6 +11,7 @@ from qdrant_client.http import models
 import numpy as np
 from app.core.config import settings
 import uuid
+from starlette.concurrency import run_in_threadpool
 
 logger = logging.getLogger(__name__)
 
@@ -26,17 +27,11 @@ class VectorService:
     Handles storage, retrieval, and similarity search for candidate and job embeddings.
     """
     
-    def __init__(self):
-        """Initialize Qdrant client and ensure collection exists."""
-        self.client = QdrantClient(
-            host=settings.QDRANT_HOST,
-            port=settings.QDRANT_PORT
-        )
-        self.collection_name = settings.QDRANT_COLLECTION_NAME
-        self.vector_size = settings.QDRANT_VECTOR_SIZE
-        
-        # Ensure collection exists
-        self._ensure_collection_exists()
+    def __init__(self, client: QdrantClient, collection_name: str, vector_size: int):
+        self.client = client
+        self.collection_name = collection_name
+        self.vector_size = vector_size
+        # Collection existence should be ensured externally at startup
         
     def _ensure_collection_exists(self):
         """Create the collection if it doesn't exist."""
@@ -61,7 +56,7 @@ class VectorService:
             logger.error(f"Error ensuring collection exists: {str(e)}")
             raise
     
-    def store_candidate_embedding(
+    async def store_candidate_embedding(
         self, 
         candidate_id: str, 
         embedding: List[float], 
@@ -110,7 +105,7 @@ class VectorService:
             logger.error(f"Error storing candidate embedding: {str(e)}")
             return False
     
-    def store_job_embedding(
+    async def store_job_embedding(
         self, 
         job_id: str, 
         embedding: List[float], 
@@ -159,7 +154,7 @@ class VectorService:
             logger.error(f"Error storing job embedding: {str(e)}")
             return False
     
-    def search_similar_candidates(
+    async def search_similar_candidates(
         self, 
         job_embedding: List[float], 
         limit: int = 10,
@@ -212,7 +207,7 @@ class VectorService:
             logger.error(f"Error searching similar candidates: {str(e)}")
             return []
     
-    def search_similar_jobs(
+    async def search_similar_jobs(
         self, 
         candidate_embedding: List[float], 
         limit: int = 10,
@@ -265,7 +260,7 @@ class VectorService:
             logger.error(f"Error searching similar jobs: {str(e)}")
             return []
     
-    def get_embedding(self, entity_id: str) -> Optional[List[float]]:
+    async def get_embedding(self, entity_id: str) -> Optional[List[float]]:
         """
         Retrieve an embedding by entity ID.
         
@@ -291,7 +286,7 @@ class VectorService:
             logger.error(f"Error retrieving embedding: {str(e)}")
             return None
     
-    def delete_embedding(self, entity_id: str) -> bool:
+    async def delete_embedding(self, entity_id: str) -> bool:
         """
         Delete an embedding by entity ID.
         
@@ -316,7 +311,7 @@ class VectorService:
             logger.error(f"Error deleting embedding: {str(e)}")
             return False
     
-    def get_collection_info(self) -> Dict:
+    async def get_collection_info(self) -> Dict:
         """
         Get information about the vector collection.
         
@@ -335,7 +330,7 @@ class VectorService:
             logger.error(f"Error getting collection info: {str(e)}")
             return {}
     
-    def health_check(self) -> bool:
+    async def health_check(self) -> bool:
         """
         Perform a health check on the Qdrant connection.
         

@@ -2,12 +2,24 @@ from fastapi import FastAPI
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from app.core.limiter import limiter
+from app.core.database import connect_to_mongo, close_mongo_connection, connect_to_neo4j, close_neo4j_connection
+from app.core.ml_models import load_models
 from app.api.routers import candidates, jobs, companies, stats, uploads
 from app.auth import routes as auth
 
 app = FastAPI(title="mAIndScout API")
 
-# Add the centralized rate limiter and exception handler
+@app.on_event("startup")
+async def startup_event():
+    await connect_to_mongo()
+    await connect_to_neo4j()
+    load_models()
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    await close_mongo_connection()
+    await close_neo4j_connection()
+
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 

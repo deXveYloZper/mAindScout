@@ -39,7 +39,7 @@ async def health_check():
         # Check Qdrant
         try:
             vector_service = VectorService()
-            vector_service.health_check()
+            await vector_service.health_check()
             services["qdrant"] = "healthy"
         except Exception as e:
             logger.error(f"Qdrant health check failed: {str(e)}")
@@ -48,7 +48,7 @@ async def health_check():
         # Check Neo4j
         try:
             ontology_service = OntologyService()
-            ontology_service.health_check()
+            await ontology_service.health_check()
             services["neo4j"] = "healthy"
         except Exception as e:
             logger.error(f"Neo4j health check failed: {str(e)}")

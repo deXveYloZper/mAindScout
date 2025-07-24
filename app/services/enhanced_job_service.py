@@ -15,10 +15,10 @@ class EnhancedJobService(BaseService[JobDescription]):
     while preserving all existing functionality from JobService.
     """
     
-    def __init__(self, db: Database):
+    def __init__(self, job_service, db):
         """Initialize the enhanced job service."""
         super().__init__("JobDescriptions", db=db)
-        self.legacy_service = JobService(db=db)
+        self.legacy_service = job_service
         self.logger = logging.getLogger(__name__)
 
     async def create_job(self, job: JobDescription) -> JobDescription:

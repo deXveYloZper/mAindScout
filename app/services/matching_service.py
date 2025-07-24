@@ -14,9 +14,9 @@ logger = logging.getLogger(__name__)
 class MatchingService:
     def __init__(
         self,
-        candidate_service: CandidateService,
-        job_service: JobService,
-        vector_service: VectorService
+        candidate_service,
+        job_service,
+        vector_service
     ):
         self.candidate_service = candidate_service
         self.job_service = job_service

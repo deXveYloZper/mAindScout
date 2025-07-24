@@ -14,10 +14,9 @@ class EnhancedCompanyService(BaseService[CompanyProfile]):
     while preserving all existing functionality from CompanyService.
     """
     
-    def __init__(self):
-        """Initialize the enhanced company service."""
-        super().__init__("companies")
-        self.legacy_service = CompanyService()
+    def __init__(self, company_service: CompanyService, db):
+        super().__init__("companies", db=db)
+        self.legacy_service = company_service
         self.logger = logging.getLogger(__name__)
 
     async def create_company(self, company: CompanyProfile) -> CompanyProfile:

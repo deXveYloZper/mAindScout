@@ -9,8 +9,7 @@ from app.auth.dependencies import get_current_active_user, get_current_recruiter
 from app.auth.models import User
 from app.core.logging import logger
 from app.core.limiter import limiter
-from app.api.dependencies import get_candidate_service, get_job_service
-from app.api.dependencies import get_matching_service
+from app.api.dependencies import get_candidate_service, get_job_service, get_matching_service
 from app.services.matching_service import MatchingService
 
 candidate_crud_router = APIRouter()

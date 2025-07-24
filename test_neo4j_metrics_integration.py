@@ -16,7 +16,7 @@ from app.services.entity_normalization_service import EntityNormalizationService
 from app.services.candidate_metrics_service import CandidateMetricsService
 from app.core.config import settings
 
-def test_ontology_service():
+async def test_ontology_service():
     """Test the Neo4j ontology service."""
     print("🔍 Testing Neo4j Ontology Service...")
     
@@ -25,7 +25,7 @@ def test_ontology_service():
         ontology = OntologyService()
         
         # Test health check
-        health_status = ontology.health_check()
+        health_status = await ontology.health_check()
         print(f"✅ Neo4j Health Check: {'PASSED' if health_status else 'FAILED'}")
         
         if not health_status:
@@ -37,7 +37,7 @@ def test_ontology_service():
         print("\n🧪 Testing Skill Normalization:")
         
         for skill in test_skills:
-            canonical = ontology.normalize_skill(skill)
+            canonical = await ontology.normalize_skill(skill)
             print(f"  {skill} -> {canonical or 'Not found'}")
         
         # Test job title normalization
@@ -45,26 +45,26 @@ def test_ontology_service():
         print("\n🧪 Testing Job Title Normalization:")
         
         for title in test_titles:
-            canonical = ontology.normalize_job_title(title)
+            canonical = await ontology.normalize_job_title(title)
             print(f"  {title} -> {canonical or 'Not found'}")
         
         # Test adding custom mappings
         print("\n🧪 Testing Custom Mapping Addition:")
-        success = ontology.add_skill_alias("Python", "py")
+        success = await ontology.add_skill_alias("Python", "py")
         print(f"  Added 'py' -> 'Python': {'SUCCESS' if success else 'FAILED'}")
         
         # Test the new mapping
-        canonical = ontology.normalize_skill("py")
+        canonical = await ontology.normalize_skill("py")
         print(f"  'py' -> {canonical or 'Not found'}")
         
-        ontology.close()
+        await ontology.close()
         return True
         
     except Exception as e:
         print(f"❌ Ontology Service Test Failed: {str(e)}")
         return False
 
-def test_entity_normalization_service():
+async def test_entity_normalization_service():
     """Test the entity normalization service."""
     print("\n🔍 Testing Entity Normalization Service...")
     
@@ -76,7 +76,7 @@ def test_entity_normalization_service():
         test_skills = ["python", "javascript", "react", "aws", "docker", "unknown_skill", "py"]
         print("\n🧪 Testing Skill Normalization with Fuzzy Matching:")
         
-        normalized_skills = entity_norm.normalize_skills(test_skills, fuzzy_threshold=80.0)
+        normalized_skills = await entity_norm.normalize_skills(test_skills, fuzzy_threshold=80.0)
         
         for skill_data in normalized_skills:
             print(f"  {skill_data['original']} -> {skill_data['canonical']} "
@@ -86,7 +86,7 @@ def test_entity_normalization_service():
         test_titles = ["software engineer", "swe", "senior developer", "devops", "unknown_title"]
         print("\n🧪 Testing Job Title Normalization:")
         
-        normalized_titles = entity_norm.normalize_job_titles(test_titles, fuzzy_threshold=80.0)
+        normalized_titles = await entity_norm.normalize_job_titles(test_titles, fuzzy_threshold=80.0)
         
         for title_data in normalized_titles:
             print(f"  {title_data['original']} -> {title_data['canonical']} "
@@ -111,7 +111,7 @@ def test_entity_normalization_service():
         ]
         
         print("\n🧪 Testing Work Experience Normalization:")
-        normalized_exp = entity_norm.normalize_work_experience(test_work_exp)
+        normalized_exp = await entity_norm.normalize_work_experience(test_work_exp)
         
         for i, exp in enumerate(normalized_exp):
             print(f"  Experience {i+1}:")
@@ -137,7 +137,7 @@ def test_entity_normalization_service():
         print(f"❌ Entity Normalization Service Test Failed: {str(e)}")
         return False
 
-def test_candidate_metrics_service():
+async def test_candidate_metrics_service():
     """Test the candidate metrics service."""
     print("\n🔍 Testing Candidate Metrics Service...")
     
@@ -218,7 +218,7 @@ def test_candidate_metrics_service():
         print(f"❌ Candidate Metrics Service Test Failed: {str(e)}")
         return False
 
-def test_integration():
+async def test_integration():
     """Test the complete integration of all services."""
     print("\n🔍 Testing Complete Integration...")
     
@@ -257,8 +257,8 @@ def test_integration():
         
         # Step 1: Entity Normalization
         entity_norm = EntityNormalizationService()
-        normalized_skills = entity_norm.normalize_skills(test_candidate_data["skills"])
-        normalized_work_exp = entity_norm.normalize_work_experience(test_candidate_data["work_experience"])
+        normalized_skills = await entity_norm.normalize_skills(test_candidate_data["skills"])
+        normalized_work_exp = await entity_norm.normalize_work_experience(test_candidate_data["work_experience"])
         
         print("✅ Entity Normalization Complete")
         
@@ -291,7 +291,7 @@ def test_integration():
         print(f"❌ Integration Test Failed: {str(e)}")
         return False
 
-def main():
+async def main():
     """Run all tests."""
     print("🚀 Starting Neo4j, Entity Normalization, and Candidate Metrics Integration Tests")
     print("=" * 80)
@@ -318,7 +318,7 @@ def main():
         print(f"{'='*60}")
         
         try:
-            result = test_func()
+            result = await test_func()
             results.append((test_name, result))
             
             if result:
@@ -352,5 +352,5 @@ def main():
     return passed == total
 
 if __name__ == "__main__":
-    success = main()
+    success = asyncio.run(main())
     sys.exit(0 if success else 1) 

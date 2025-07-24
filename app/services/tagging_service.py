@@ -12,11 +12,11 @@ import joblib
 
 
 class TaggingService:
-    def __init__(self):
+    def __init__(self, vectorizer=None, model=None, mlb=None):
         self.logger = logging.getLogger(__name__)
-        self.vectorizer = None
-        self.model = None
-        self.mlb = None
+        self.vectorizer = vectorizer
+        self.model = model
+        self.mlb = mlb
 
     def load_data(self, data_path: str) -> pd.DataFrame:
         """

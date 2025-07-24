@@ -15,14 +15,14 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def test_qdrant_connection():
+async def test_qdrant_connection():
     """Test basic Qdrant connection and collection creation."""
     try:
         logger.info("Testing Qdrant connection...")
         vector_service = VectorService()
         
         # Test health check
-        if vector_service.health_check():
+        if await vector_service.health_check():
             logger.info("✅ Qdrant connection successful")
         else:
             logger.error("❌ Qdrant connection failed")
@@ -195,7 +195,7 @@ def test_vector_service_methods():
         logger.error(f"❌ Error testing vector service methods: {str(e)}")
         return False
 
-def main():
+async def main():
     """Run all Qdrant integration tests."""
     logger.info("🚀 Starting Qdrant Integration Tests")
     logger.info("=" * 50)
@@ -212,7 +212,7 @@ def main():
     for test_name, test_func in tests:
         logger.info(f"\n🧪 Running {test_name} test...")
         try:
-            if test_func():
+            if await test_func():
                 logger.info(f"✅ {test_name} test PASSED")
                 passed += 1
             else:
@@ -231,5 +231,6 @@ def main():
         return False
 
 if __name__ == "__main__":
-    success = main()
+    import asyncio
+    success = asyncio.run(main())
     sys.exit(0 if success else 1) 

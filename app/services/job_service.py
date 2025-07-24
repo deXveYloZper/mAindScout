@@ -23,8 +23,8 @@ class JobService(BaseService[JobDescription]):
     def __init__(
         self,
         db: Database,
-        vector_service: VectorService,
-        embedding_model: SentenceTransformer,
+        vector_service,
+        embedding_model,
         nlp_model
     ):
         super().__init__("JobDescriptions", db=db)
@@ -33,15 +33,10 @@ class JobService(BaseService[JobDescription]):
         self.embedding_model = embedding_model
         self.logger = logging.getLogger(__name__)
         self.nlp_model = nlp_model
-
-        # Load the taxonomy
         taxonomy_path = os.path.join('app', 'data', 'tag_taxonomy.json')
         with open(taxonomy_path, 'r', encoding='utf-8') as f:
             nested_taxonomy = json.load(f)
-        # Flatten the taxonomy
         self.flat_taxonomy = nlp_utils.flatten_taxonomy(nested_taxonomy)
-
-        # Create indexes on frequently queried fields
         self.collection.create_index("tags")
         self.collection.create_index("required_skills")
         self.collection.create_index("title")

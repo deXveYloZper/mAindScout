@@ -157,12 +157,12 @@ class CandidateService(BaseService[CandidateProfile]):
             mapped_data["standardized_skills"] = standardized_skills
 
             # Normalize entities using ontology
-            normalized_skills = await run_in_threadpool(self.entity_normalization.normalize_skills, skills)
+            normalized_skills = await self.entity_normalization.normalize_skills(skills)
             mapped_data["normalized_skills"] = normalized_skills
             
             # Normalize work experience
             if mapped_data.get("work_experience"):
-                normalized_work_exp = await run_in_threadpool(self.entity_normalization.normalize_work_experience, mapped_data["work_experience"])
+                normalized_work_exp = await self.entity_normalization.normalize_work_experience(mapped_data["work_experience"])
                 mapped_data["normalized_work_experience"] = normalized_work_exp
 
             # Generate tags
@@ -426,3 +426,19 @@ class CandidateService(BaseService[CandidateProfile]):
         except Exception as e:
             self.logger.error(f"Error generating embedding for candidate {candidate_id}: {str(e)}")
             return False
+
+    async def get_candidate_embedding(self, candidate_id: str) -> Optional[List[float]]:
+        """
+        Get the vector embedding for a candidate.
+        
+        Args:
+            candidate_id: The candidate's database ID
+            
+        Returns:
+            Optional[List[float]]: The candidate's embedding if found, None otherwise
+        """
+        try:
+            return await run_in_threadpool(self.vector_service.get_embedding, candidate_id)
+        except Exception as e:
+            self.logger.error(f"Error getting embedding for candidate {candidate_id}: {str(e)}")
+            return None

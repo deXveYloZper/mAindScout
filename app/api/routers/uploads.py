@@ -2,7 +2,7 @@
 from fastapi import APIRouter, HTTPException, status, UploadFile, File, Form, Request, Depends
 from app.core.logging import logger
 from app.core.limiter import limiter
-from app.api.dependencies import get_job_service, get_candidate_service
+from app.api.dependencies import get_candidate_service, get_job_service
 from app.services.job_service import JobService
 from app.services.candidate_service import CandidateService
 from enum import Enum
